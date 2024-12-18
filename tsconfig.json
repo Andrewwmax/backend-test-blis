@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"target": "ES6",
+		"outDir": "./dist",
+		"rootDir": "./src",
+
+		"module": "commonjs",
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true
+	},
+	"exclude": ["node_modules", "prisma", "tests", "mocks"]
+}
