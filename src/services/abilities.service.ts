@@ -8,21 +8,14 @@ export const createAbilityService = async (name: string) => {
 	});
 };
 
-export const updateAbilityStatusService = async (
-	id: string,
-	active: boolean
-) => {
+export const updateAbilityStatusService = async (id: string, active: boolean) => {
 	return prisma.abilities.update({
 		where: { id },
 		data: { active },
 	});
 };
 
-export const assignAbilityToUserService = async (
-	user_id: string,
-	ability_id: string,
-	years_experience: number
-) => {
+export const assignAbilityToUserService = async (user_id: string, ability_id: string, years_experience: number) => {
 	// Verifica se a habilidade está ativa
 	const ability = await prisma.abilities.findUnique({
 		where: { id: ability_id },
@@ -42,17 +35,26 @@ export const assignAbilityToUserService = async (
 	});
 };
 
-export const deleteUserAbilityService = async (id: string) => {
-	return prisma.usersAbilities.delete({
-		where: { id },
+export const deleteUserAbilitiesService = async (ids: string[]) => {
+	// Verifica se os ids existem
+	const existingIds = await prisma.usersAbilities.findMany({
+		where: { id: { in: ids } },
+		select: { id: true },
+	});
+
+	const nonExistingIds = ids.filter((id) => !existingIds.some((existingId) => existingId.id === id));
+
+	if (nonExistingIds.length > 0) {
+		throw new Error(`Os seguintes ids não existem: ${nonExistingIds.join(", ")}.`);
+	}
+
+	// Deleta os ids existentes
+	return prisma.usersAbilities.deleteMany({
+		where: { id: { in: ids } },
 	});
 };
 
-export const listUserAbilitiesService = async (
-	user_id: string,
-	page: number,
-	limit: number
-) => {
+export const listUserAbilitiesService = async (user_id: string, page: number, limit: number) => {
 	const skip = (page - 1) * limit;
 
 	return prisma.usersAbilities.findMany({

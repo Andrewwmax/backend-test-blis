@@ -1,25 +1,28 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 
+import {
+	createAbilityService,
+	updateAbilityStatusService,
+	deleteUserAbilitiesService,
+	listUserAbilitiesService,
+	assignAbilityToUserService,
+} from "../services/abilities.service";
+
 const prisma = new PrismaClient();
 
-/**
- * Cria uma nova habilidade
- */
 export const createAbility = async (req: Request, res: Response) => {
 	const { name } = req.body;
 
 	try {
-		const ability = await prisma.abilities.create({
-			data: { name },
-		});
+		const ability = await createAbilityService(name);
 
 		res.status(201).json({
 			message: "Habilidade criada com sucesso.",
 			ability,
 		});
 	} catch (error) {
-		console.error(error);
+		// console.error(error);
 		res.status(500).json({ message: "Erro ao criar habilidade.", error });
 	}
 };
@@ -27,21 +30,18 @@ export const createAbility = async (req: Request, res: Response) => {
 /**
  * Edita uma habilidade (ativa ou desativa)
  */
-export const editAbility = async (req: Request, res: Response) => {
+export const updateAbility = async (req: Request, res: Response) => {
 	const { id, active } = req.body;
 
 	try {
-		const ability = await prisma.abilities.update({
-			where: { id },
-			data: { active },
-		});
+		const ability = await updateAbilityStatusService(id, active);
 
 		res.status(200).json({
 			message: "Habilidade atualizada com sucesso.",
 			ability,
 		});
 	} catch (error) {
-		console.error(error);
+		// console.error(error);
 		res.status(400).json({
 			message: "Erro ao atualizar habilidade.",
 			error,
@@ -57,31 +57,20 @@ export const assignAbility = async (req: Request, res: Response): Promise<any> =
 
 	try {
 		// Verifica se a habilidade está ativa
-		const ability = await prisma.abilities.findUnique({
-			where: { id: ability_id },
-		});
+		await assignAbilityToUserService(user_id, ability_id, years_experience);
 
-		if (!ability || !ability.active) {
-			return res.status(400).json({ message: "Habilidade inativa ou não encontrada." });
-		}
-
-		const userAbility = await prisma.usersAbilities.create({
-			data: {
-				user_id,
-				ability_id,
-				years_experience,
-			},
+		const userAbility = await prisma.usersAbilities.findFirst({
+			where: { user_id, ability_id },
 		});
 
 		res.status(201).json({
 			message: "Habilidade relacionada ao usuário com sucesso.",
 			userAbility,
 		});
-	} catch (error) {
-		console.error(error);
-		res.status(500).json({
-			message: "Erro ao relacionar habilidade.",
-			error,
+	} catch (error: any) {
+		// console.error(error);
+		res.status(400).json({
+			error: error.message,
 		});
 	}
 };
@@ -97,36 +86,20 @@ export const deleteAbilities = async (req: Request, res: Response) => {
 	const { ids } = req.body;
 
 	try {
-		await prisma.usersAbilities.deleteMany({
-			where: { id: { in: ids } },
-		});
+		await deleteUserAbilitiesService(ids);
 
-		res.status(200).json({ message: "Habilidades removidas com sucesso." });
-	} catch (error) {
-		console.error(error);
-		res.status(400).json({ message: "Erro ao remover habilidades.", error });
+		res.status(200).json({ message: "Habilidade(s) removida(s) com sucesso." });
+	} catch (error: any) {
+		// console.error(error);
+		res.status(400).json({ error: error.message });
 	}
 };
 
-/**
- * Lista habilidades de um usuário com paginação
- */
 export const listUserAbilities = async (req: Request, res: Response) => {
 	const { user_id, page = 1, limit = 10 } = req.query;
 
 	try {
-		const abilities = await prisma.usersAbilities.findMany({
-			where: { user_id: String(user_id) },
-			include: {
-				Ability: true,
-				User: {
-					select: { id: true, name: true, email: true }, // Exclui senha
-				},
-			},
-			skip: (Number(page) - 1) * Number(limit),
-			take: Number(limit),
-			orderBy: { created_at: "desc" },
-		});
+		const abilities = await listUserAbilitiesService(String(user_id), Number(page), Number(limit));
 
 		res.status(200).json({
 			message: "Habilidades do usuário listadas com sucesso.",
@@ -145,12 +118,7 @@ export const listAbilities = async (req: Request, res: Response) => {
 	const { page = 1, limit = 10 } = req.query;
 
 	try {
-		const abilities = await prisma.abilities.findMany({
-			where: { active: true },
-			skip: (Number(page) - 1) * Number(limit),
-			take: Number(limit),
-			orderBy: { created_at: "desc" },
-		});
+		const abilities = await listUserAbilitiesService("all", Number(page), Number(limit));
 
 		res.status(200).json({
 			message: "Habilidades listadas com sucesso.",

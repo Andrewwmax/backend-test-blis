@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import {
-	editAbility,
+	updateAbility,
 	createAbility,
 	assignAbility,
 	deleteAbilities,
@@ -16,7 +16,7 @@ import { assignAbilitySchema, createAbilitySchema, editAbilitySchema, userAbilit
 const router = Router();
 
 router.post("/abilities", authenticate, validate(createAbilitySchema), createAbility); // #7 Criar habilidade
-router.put("/abilities", authenticate, validate(editAbilitySchema), editAbility); // #8 Editar habilidade
+router.put("/abilities", authenticate, validate(editAbilitySchema), updateAbility); // #8 Editar habilidade
 router.get("/abilities", authenticate, listAbilities); // #9 Listar todas habilidades
 
 router.post("/users/abilities", authenticate, validate(assignAbilitySchema), assignAbility); // #10 Relacionar habilidade com usuário

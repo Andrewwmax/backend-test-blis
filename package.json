@@ -9,7 +9,9 @@
 		"start": "node dist/server.js",
 		"seed": "ts-node prisma/seed.ts",
 		"test": "jest",
-		"test:watch": "jest --watch"
+		"test:cov": "jest --coverage",
+		"test:watch": "jest --watch",
+		"test:coverage": "jest --coverage --watchAll"
 	},
 	"keywords": [],
 	"author": "André Couto",

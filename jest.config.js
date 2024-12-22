@@ -6,6 +6,12 @@ module.exports = {
 	collectCoverage: false,
 	resetMocks: true,
 	clearMocks: true,
-	collectCoverageFrom: ["src/**/*.{ts,js}", "!src/**/*.d.ts", "!src/schemas/**/*"],
+	collectCoverageFrom: [
+		"src/**/*.{ts,js}",
+		"!src/**/*.d.ts",
+		"!src/schemas/**/*",
+		"!src/client.ts",
+		"!src/server.ts",
+	],
 	setupFilesAfterEnv: ["<rootDir>/src/singleton.ts"],
 };

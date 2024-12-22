@@ -32,7 +32,7 @@ export const listUserDocuments = async (req: Request, res: Response): Promise<an
 	try {
 		const documents = await getUserDocumentsService(user_id);
 
-		if (documents.length === 0) {
+		if (!documents || documents.length === 0) {
 			return res.status(404).json({ message: "Nenhum arquivo encontrado para este usuário." });
 		}
 
@@ -41,7 +41,7 @@ export const listUserDocuments = async (req: Request, res: Response): Promise<an
 			files: documents,
 		});
 	} catch (error: any) {
-		console.error(error.message);
+		// console.error(error.message);
 		res.status(500).json({ message: "Erro ao buscar arquivos do usuário.", error });
 	}
 };

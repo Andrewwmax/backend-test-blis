@@ -13,7 +13,8 @@ describe("POST /users/documents", () => {
 			.set("Authorization", `Bearer ${token}`)
 			.field("name", "Disciplina")
 			.attach("file", filePath);
-
+		// console.log(filePath);
+		// console.log(response.body);
 		expect(response.status).toBe(201);
 		expect(response.body).toHaveProperty("message", "Documento enviado com sucesso.");
 		expect(response.body.document).toHaveProperty("url");
@@ -26,6 +27,7 @@ describe("POST /users/documents", () => {
 			.post("/api/users/documents")
 			.set("Authorization", `Bearer ${token}`)
 			.field("name", "Disciplina");
+		// console.log(response.body);
 
 		expect(response.status).toBe(400);
 		expect(response.body).toHaveProperty("message", "Arquivo não enviado.");
@@ -67,5 +69,16 @@ describe("POST /users/documents", () => {
 		expect(response.status).toBe(200);
 		expect(Buffer.isBuffer(response.body)).toBeTruthy();
 		expect(response.body).toBeTruthy();
+	});
+
+	it("Deve retornar erro 404 se o documento nao for encontrado para o usuário", async () => {
+		const token = process.env.TEST_TOKEN; // Simule ou obtenha um token JWT válido
+		const fileId = "invalid-file-id";
+		const response = await request(app)
+			.get(`/api/users/documents/${fileId}`)
+			.set("Authorization", `Bearer ${token}`);
+
+		expect(response.status).toBe(404);
+		expect(response.body).toHaveProperty("message", "Arquivo não encontrado para este usuário.");
 	});
 });
