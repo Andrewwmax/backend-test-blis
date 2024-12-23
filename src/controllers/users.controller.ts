@@ -4,19 +4,49 @@ import { Request, Response } from "express";
 import { comparePassword } from "../utils/hash";
 import { addToBlacklist } from "../utils/tokenBlacklist";
 import { createUserService, getUserByEmailService } from "../services/users.service";
+import {
+	GetUserByEmail,
+	RequestWithAuthHeader,
+	User,
+	UserCreateRequest,
+	UserCreateResponse,
+	UserLoginRequest,
+	UserLoginResponse,
+} from "../interfaces/user";
 
-export const createUser = async (req: Request, res: Response): Promise<any> => {
+/**
+ * Cria um novo usuário.
+ * @param req Requisição HTTP, contendo as informações do usuário no corpo da requisição.
+ * @param res Resposta HTTP, contendo o status e o corpo da resposta.
+ * @returns Retorna um objeto com o status 201 e um usuário criado, ou um objeto com o status 400 e uma mensagem de erro se o email já estiver em uso.
+ */
+export const createUser = async (req: UserCreateRequest, res: UserCreateResponse): Promise<any> => {
 	const { name, birthdate, email, password } = req.body;
 
 	try {
-		const user = await createUserService(name, new Date(birthdate), email, password);
-		res.status(201).json({ message: "Usuário criado com sucesso.", user });
+		// Cria o novo usuário
+		const user: User = await createUserService(name, new Date(birthdate), email, password);
+
+		// Retorna o usuário criado com sucesso
+		res.status(201).json({
+			message: "Usuário criado com sucesso.",
+			user,
+		});
 	} catch (error: any) {
-		res.status(400).json({ message: error.message });
+		// Retorna um erro se o email já estiver em uso
+		res.status(400).json({
+			message: error.message,
+		});
 	}
 };
 
-export const loginUser = async (req: Request, res: Response): Promise<any> => {
+/**
+ * Realiza o login de um usuário.
+ * @param req Requisição HTTP, contendo o email e a senha do usuário no corpo da requisição.
+ * @param res Resposta HTTP, contendo o status e o corpo da resposta.
+ * @returns Retorna um objeto com o status 200 e um token de autenticação JWT, ou um objeto com o status 401 e uma mensagem de erro se o email ou a senha forem inválidos, ou um objeto com o status 404 e uma mensagem de erro se o usuário não for encontrado.
+ */
+export const loginUser = async (req: UserLoginRequest, res: UserLoginResponse): Promise<any> => {
 	const { email, password } = req.body;
 
 	try {
@@ -25,190 +55,49 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 			throw new Error("Erro ao realizar login.");
 		}
 
-		const user = await getUserByEmailService(email);
-		// console.log({ userscontroller: user });
+		// Verifica se o usuário existe no banco de dados
+		const user: GetUserByEmail = await getUserByEmailService(email);
 
 		if (!user) {
 			return res.status(404).json({ message: "Usuário não encontrado." });
 		}
 
+		// Verifica se a senha é válida
 		const isPasswordValid = await comparePassword(password, user.password);
 		if (!isPasswordValid) {
 			return res.status(401).json({ message: "Senha incorreta." });
 		}
 
+		// Cria o token de autenticação JWT
 		const secret = process.env.JWT_SECRET as string;
 		const token = jwt.sign({ id: user.id, name: user.name }, secret, {
-			expiresIn: "720h",
+			expiresIn: process.env.EXPIRATION_TIME_JWT,
 		});
 
 		res.json({ message: "Login realizado com sucesso.", token });
 	} catch (error: any) {
+		// Caso ocorra um erro interno do servidor, retorna um objeto com o status 500 e uma mensagem de erro.
 		res.status(500).json({ message: error.message });
 	}
 };
 
-// export const uploadDocument = async (req: Request, res: Response): Promise<any> => {
-// 	const user_id = (req as any).user.id; // Pega o user_id anexado pelo middleware
-// 	const name = (req as any).user.name; // Pega o user_id anexado pelo middleware
+/**
+ * Realiza o logout do usuário.
+ * @param req Requisição HTTP, contendo o token de autenticação no header Authorization.
+ * @param res Resposta HTTP, contendo o status e o corpo da resposta.
+ * @returns Retorna um objeto com o status 200 e uma mensagem de sucesso ou um objeto com o status 500 e uma mensagem de erro.
+ */
+export const logoutUser = async (req: RequestWithAuthHeader, res: Response): Promise<any> => {
+	const token = req.headers.authorization?.split(" ")[1];
 
-// 	console.log({ uploadDocument: { user_id, name, file: req.file } });
-// 	const file = req.file;
-
-// 	if (!file) {
-// 		return res.status(400).json({ message: "Arquivo não enviado." });
-// 	}
-
-// 	try {
-// 		const document = await createUserDocumentService(name, user_id, `/uploads/${file.filename}`);
-// 		res.status(201).json({
-// 			message: "Documento enviado com sucesso.",
-// 			document,
-// 		});
-// 	} catch (error) {
-// 		res.status(500).json({ message: error });
-// 	}
-// };
-
-export const logoutUser = async (req: Request, res: Response): Promise<any> => {
-	const authHeader = req.headers.authorization;
-
-	if (!authHeader) {
+	if (!token) {
 		return res.status(400).json({ message: "Token não fornecido." });
 	}
 
-	const token = authHeader.split(" ")[1];
-
 	try {
 		addToBlacklist(token);
-		res.status(200).json({ message: "Logout realizado com sucesso." });
+		return res.status(200).json({ message: "Logout realizado com sucesso." });
 	} catch (error: any) {
-		res.status(500).json({ message: "Erro ao realizar logout.", error });
+		return res.status(500).json({ message: "Erro ao realizar logout.", error });
 	}
 };
-
-// export const downloadDocument = async (req: Request, res: Response): Promise<any> => {
-// 	try {
-// 		const { filename } = req.params;
-
-// 		// Exemplo: validar acesso ao arquivo (substituir por lógica real)
-
-// 		const hasAccess = true; // Substituir por consulta ao banco ou regra de negócio
-// 		if (!hasAccess) {
-// 			return res.status(403).json({ message: "Acesso negado ao arquivo." });
-// 		}
-
-// 		const filePath = path.join(__dirname, "../../uploads", filename);
-// 		res.status(200).sendFile(filePath);
-// 	} catch (error) {
-// 		res.status(500).json({ message: "Erro ao baixar o arquivo.", error });
-// 	}
-// };
-
-// import jwt from "jsonwebtoken";
-// import { Request, Response } from "express";
-
-// import { PrismaClient } from "@prisma/client";
-
-// import { hashPassword, comparePassword } from "../utils/hash";
-
-// const prisma = new PrismaClient();
-
-// /**
-//  * Cria um novo usuário
-//  */
-// export const createUser = async (req: Request, res: Response): Promise<any> => {
-// 	const { name, birthdate, email, password } = req.body;
-
-// 	try {
-// 		// Verifica se o email já existe
-// 		const existingUser = await prisma.users.findUnique({
-// 			where: { email },
-// 		});
-// 		if (existingUser) {
-// 			return res.status(400).json({ message: "Email já está em uso." });
-// 		}
-
-// 		// Criptografa a senha e cria o usuário
-// 		const hashedPassword = await hashPassword(password);
-// 		const user = await prisma.users.create({
-// 			data: {
-// 				name,
-// 				birthdate: new Date(birthdate),
-// 				email,
-// 				password: hashedPassword,
-// 			},
-// 		});
-
-// 		res.status(201).json({
-// 			message: "Usuário criado com sucesso!",
-// 			user: { id: user.id, name: user.name, email: user.email },
-// 		});
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).json({ message: "Erro ao criar usuário.", error });
-// 	}
-// };
-
-// /**
-//  * Realiza login do usuário
-//  */
-// export const loginUser = async (req: Request, res: Response): Promise<any> => {
-// 	const { email, password } = req.body;
-
-// 	try {
-// 		// Busca o usuário pelo email
-// 		const user = await prisma.users.findUnique({ where: { email } });
-// 		if (!user) {
-// 			return res.status(404).json({ message: "Usuário não encontrado." });
-// 		}
-
-// 		// Compara a senha
-// 		const isPasswordValid = await comparePassword(password, user.password);
-// 		if (!isPasswordValid) {
-// 			return res.status(401).json({ message: "Senha incorreta." });
-// 		}
-
-// 		// Gera o token JWT
-// 		const secret = process.env.JWT_SECRET as string;
-// 		const token = jwt.sign({ id: user.id }, secret, { expiresIn: "1h" });
-
-// 		res.json({ message: "Login realizado com sucesso.", token });
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).json({ message: "Erro ao realizar login.", error });
-// 	}
-// };
-
-// /**
-//  * Faz upload de documentos de um usuário
-//  */
-// export const uploadDocument = async (
-// 	req: Request,
-// 	res: Response
-// ): Promise<any> => {
-// 	const { name, user_id } = req.body;
-// 	const file = req.file;
-
-// 	if (!file) {
-// 		return res.status(400).json({ message: "Arquivo não enviado." });
-// 	}
-
-// 	try {
-// 		const document = await prisma.userDocuments.create({
-// 			data: {
-// 				name,
-// 				url: `/uploads/${file.filename}`,
-// 				user_id,
-// 			},
-// 		});
-
-// 		res.status(201).json({
-// 			message: "Documento enviado com sucesso.",
-// 			document,
-// 		});
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).json({ message: "Erro ao enviar documento.", error });
-// 	}
-// };

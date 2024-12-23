@@ -34,7 +34,7 @@ services:
             - .env.test
         depends_on:
             - db
-        command: npm run test:cov
+        command: npm run test:coverage:watch
 
     db_test:
         image: mysql:8
