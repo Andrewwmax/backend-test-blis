@@ -1,26 +1,38 @@
-interface Ability {
+import { UserAbility } from "./userAbility";
+
+export interface Ability {
 	id: string;
 	name: string;
 	active: boolean;
-	// Add other properties as needed
+	created_at: Date;
+	updated_at: Date;
 }
 
-interface CreateAbilityService {
-	(name: string): Promise<Ability>;
+export interface CreateAbilityResponse {
+	message: string;
+	ability: Ability;
 }
 
-interface UpdateAbilityStatusService {
-	(id: string, active: boolean): Promise<Ability>;
+export interface UpdateAbilityResponse {
+	message: string;
+	ability: Ability;
 }
 
-interface AssignAbilityToUserService {
-	(user_id: string, ability_id: string, years_experience: number): Promise<UserAbility>;
+export interface AssignAbilityResponse {
+	message: string;
+	userAbility: UserAbility | null;
+}
+export interface DeleteAbilityResponse {
+	message: string;
+	abilities: Ability[];
+}
+export interface ListUserAbilityResponse {
+	message: string;
+	abilities: UserAbility[];
+}
+export interface ListAbilitiesResponse {
+	message: string;
+	abilities: UserAbility[];
 }
 
-interface DeleteUserAbilitiesService {
-	(ids: string[]): Promise<{ ids: string[] }>;
-}
-
-interface ListUserAbilitiesService {
-	(user_id: string, page: number, limit: number): Promise<{ abilities: UserAbility[]; total: number }>;
-}
+export type deleteUserAbilitiesResponse = any;

@@ -1,8 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { UserDocument } from "../interfaces/userDocument";
 
 const prisma = new PrismaClient();
 
-export const getUserDocumentsService = async (user_id: string) => {
+export const getUserDocumentsService = async (
+	user_id: string
+): Promise<Pick<UserDocument, "id" | "name" | "url" | "created_at">[]> => {
 	return prisma.userDocuments.findMany({
 		where: { user_id },
 		select: {
@@ -14,7 +17,11 @@ export const getUserDocumentsService = async (user_id: string) => {
 	});
 };
 
-export const createUserDocumentService = async (name: string, user_id: string, filePath: string) => {
+export const createUserDocumentService = async (
+	name: string,
+	user_id: string,
+	filePath: string
+): Promise<UserDocument> => {
 	return prisma.userDocuments.create({
 		data: {
 			name,

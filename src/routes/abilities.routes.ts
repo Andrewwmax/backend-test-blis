@@ -11,7 +11,13 @@ import {
 
 import { authenticate, validate } from "../middlewares";
 
-import { assignAbilitySchema, createAbilitySchema, editAbilitySchema, userAbilitiesSchema } from "../schemas";
+import {
+	assignAbilitySchema,
+	createAbilitySchema,
+	deleteUserAbilitiesSchema,
+	editAbilitySchema,
+	userAbilitiesSchema,
+} from "../schemas";
 
 const router = Router();
 
@@ -21,6 +27,6 @@ router.get("/abilities", authenticate, listAbilities); // #9 Listar todas habili
 
 router.post("/users/abilities", authenticate, validate(assignAbilitySchema), assignAbility); // #10 Relacionar habilidade com usuário
 router.get("/users/abilities", authenticate, validate(userAbilitiesSchema), listUserAbilities); // #11 Listar habilidades do usuário
-router.delete("/users/abilities", authenticate, deleteAbilities); // #12 Deletar habilidade do usuário
+router.delete("/users/abilities", authenticate, validate(deleteUserAbilitiesSchema), deleteAbilities); // #12 Deletar habilidade do usuário
 
 export default router;

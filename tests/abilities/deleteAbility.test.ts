@@ -120,9 +120,12 @@ describe("DELETE /abilities", () => {
 	it("Deve retornar erro 400 se as habilidades forem vazias", async () => {
 		const response = await request(app)
 			.delete("/api/users/abilities")
-			.set("Authorization", `Bearer ${process.env.TEST_TOKEN}`);
+			.set("Authorization", `Bearer ${process.env.TEST_TOKEN}`)
+			.send({
+				ids: [],
+			});
 
 		expect(response.status).toBe(400);
-		expect(response.body).toHaveProperty("error", "Cannot read properties of undefined (reading 'filter')");
+		expect(response.body).toHaveProperty("message", "Erro de validação");
 	});
 });
