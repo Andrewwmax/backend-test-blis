@@ -11,7 +11,6 @@ export const getWeatherByCoordinates = async (latitude: number, longitude: numbe
 
 	try {
 		const response: AxiosResponse<OpenWeatherMapResponse> = await axios.get(url);
-
 		// Verifica se a resposta foi bem-sucedida (status 2xx)
 		if (response.status < 200 || response.status >= 300) {
 			throw new Error(
