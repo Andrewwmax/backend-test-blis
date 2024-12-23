@@ -29,7 +29,7 @@ describe("POST /users/login", () => {
 			email: "maria@email.com",
 			password: "senhaSegura123",
 		});
-		// console.log(response.body);
+
 		expect(response.status).toBe(200);
 		expect(response.body).toHaveProperty("token");
 		expect(response.body.message).toBe("Login realizado com sucesso.");

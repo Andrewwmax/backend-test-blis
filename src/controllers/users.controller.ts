@@ -71,7 +71,7 @@ export const loginUser = async (req: UserLoginRequest, res: UserLoginResponse): 
 		// Cria o token de autenticação JWT
 		const secret = process.env.JWT_SECRET as string;
 		const token = jwt.sign({ id: user.id, name: user.name }, secret, {
-			expiresIn: process.env.EXPIRATION_TIME_JWT,
+			expiresIn: process.env.JWT_EXPIRATION_TIME,
 		});
 
 		res.json({ message: "Login realizado com sucesso.", token });

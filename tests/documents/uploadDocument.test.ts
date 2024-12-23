@@ -61,7 +61,16 @@ describe("POST /users/documents", () => {
 
 	it("Deve fazer download de um arquivo com sucesso", async () => {
 		const token = process.env.TEST_TOKEN; // Simule ou obtenha um token JWT válido
-		const fileId = process.env.TEST_FILE_ID;
+		const filePath = path.join(__dirname, `../files/${process.env.TEST_FILE_PDF}`); // Crie um PDF para teste
+
+		const response_create = await request(app)
+			.post("/api/users/documents")
+			.set("Authorization", `Bearer ${token}`)
+			.field("name", "Disciplina")
+			.attach("file", filePath);
+		// const token = process.env.TEST_TOKEN; // Simule ou obtenha um token JWT válido
+
+		const fileId = response_create.body.document.id;
 		const response = await request(app)
 			.get(`/api/users/documents/${fileId}`)
 			.set("Authorization", `Bearer ${token}`);

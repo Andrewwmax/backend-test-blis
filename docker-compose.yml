@@ -10,19 +10,20 @@ services:
             - .env
         depends_on:
             - db
+        # environment:
+        #     - NODE_ENV=development
+        # command: ["sh", "-c", "npx prisma migrate dev && npm run dev"]
 
     db:
         image: mysql:8
         container_name: mysql-blis
         ports:
             - "3306:3306"
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
-            MYSQL_DATABASE: ${DATABASE_NAME}
         command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci --init-connect='SET NAMES UTF8;' --innodb-flush-log-at-trx-commit=0
 
         volumes:
             - db_data:/var/lib/mysql
+
     app_test:
         build: .
         ports:
@@ -31,19 +32,16 @@ services:
             - .:/app
             - /app/node_modules
         env_file:
-            - .env.test
+            - .env
         depends_on:
             - db
-        command: npm run test:coverage:watch
+        command: npm run test:coverage
 
     db_test:
         image: mysql:8
         container_name: mysql-blis-test
         ports:
             - "3308:3306"
-        environment:
-            MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
-            MYSQL_DATABASE: ${DATABASE_NAME}
         command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci --init-connect='SET NAMES UTF8;' --innodb-flush-log-at-trx-commit=0
 
         volumes:
